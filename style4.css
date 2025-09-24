@@ -82,6 +82,14 @@ html {
     p20 {
         font-size: 15px;
     }
+    /*#myVideo {
+        max-height: 190vw;
+    }
+    #logo {
+        margin-top: 70vw;
+        margin-bottom: 30vw;
+    }*/
+    
 }
 
 #morework {
@@ -191,6 +199,13 @@ html {
 .worknav {
     font-size: 16px;
 }
+    /*#myVideo {
+        max-height: 190vw;
+    }
+    #logo {
+        margin-top: 70vw;
+        margin-bottom: 30vw;
+    }*/
 }
 
 @media screen and (min-width: 550px){
@@ -257,6 +272,24 @@ html {
 .worknav {
     font-size: 16px;
 }
+    /*#myVideo {
+        max-height: 190vw;
+    }
+    #logo {
+        margin-top: 60vw;
+        margin-bottom: 30vw;
+    }
+    #myVideo {
+        height: 96vh;
+        width:100vw;
+        
+        /*width: 100vw;
+        height: 100vh;
+    }
+    #logo {
+        margin-top: 30vh;
+        margin-bottom: 30vh;
+    }*/
 }
 
 @media screen and (min-width: 650px){
@@ -323,6 +356,13 @@ html {
     .worknav {
     font-size: 17px;
 }
+    /*#myVideo {
+        max-height: 190vw;
+    }
+    #logo {
+        margin-top: 50vw;
+        margin-bottom: 25vw;
+    }*/
 }
 
 @media screen and (min-width: 750px){
@@ -389,6 +429,13 @@ html {
     .worknav {
     font-size: 17px;
 }
+    /*#myVideo {
+        max-height: 100vh;
+    }
+    #logo {
+        margin-top: 40vw;
+        margin-bottom: 20vw;
+    }*/
 }
 
 @media screen and (min-width: 1050px){
@@ -455,6 +502,14 @@ html {
     .worknav {
     font-size: 17px;
 }
+    /*#myVideo {
+        width: 100vw;
+        height: 100vh;
+    }
+    #logo {
+        margin-top: 15vh;
+        margin-bottom: 15vh;
+    }*/
 }
 
 @media screen and (min-width: 1300px){
@@ -677,13 +732,13 @@ body {
 
 #logo {
     max-width: 70%;
-    margin-top: 15vh;
+    /*margin-top: 15vh;*/
     margin-left: 14vw;
 }
 
 #myVideo {
-    width: 100vw;
-    height: 100vh;
+    /*width: 100vw;*/
+    /*height: 100vh;*/
     object-fit: cover;
     position: fixed;
     left: 0;
@@ -691,7 +746,44 @@ body {
     top: 0;
     bottom: 0;
     z-index: -1;
+    justify-content: center;
 }
+
+@media screen and (orientation:portrait) {
+   #myVideo {
+        height: 96vh;
+        width:100vw;
+        
+        /*width: 100vw;
+        height: 100vh;*/
+    }
+    #logo {
+        margin-top: 30vh;
+        margin-bottom: 30vh;
+    }
+    #tile {
+        max-width: 100%;
+        margin-bottom: -5vh;
+}
+}
+/* Landscape */
+@media screen and (orientation:landscape) {
+   #myVideo {
+        height: 100vh;
+        width:100vw;
+        
+        /*width: 100vw;
+        height: 100vh;*/
+    }
+    #logo {
+        margin-top: 15vh;
+        margin-bottom: 15vh;
+    }
+    #tile {
+    max-width: 50%;
+}
+}
+
 
 p4 {
     display: block;
@@ -716,7 +808,7 @@ p4 {
     font-family: 'Quicksand', sans-serif;
     color: white;
     text-align: center;
-    margin-top: 15vh;
+    /*margin-top:15vh;*/
     animation-name: scrolldown;
     animation-duration: 3s;
 }
@@ -744,6 +836,10 @@ p4 {
     animation-delay: 1.5s;
     animation-duration: 4s;
     animation-iteration-count: infinite;
+}
+
+.pfeilcontainer {
+    height: 50%
 }
 
 
@@ -872,9 +968,9 @@ figcation {
     text-align: center;
 }
 
-#tile {
+/*#tile {
     max-width: 50%;
-}
+}*/
 
 #moviefigcaption {
     max-width: 52%;
