@@ -12,6 +12,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     *{box-sizing:border-box;margin:0;padding:0;}
+    [data-draghandle]{touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;}
     html,body{background:#f7f4f1;color:#1d1a17;font-family:'Hanken Grotesk',-apple-system,BlinkMacSystemFont,'SF Pro Text',system-ui,sans-serif;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;}
     #root{min-height:100vh;}
     #loading{position:fixed;inset:0;background:#f7f4f1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;color:#1d1a17;z-index:9999;}
@@ -232,109 +233,6 @@
     }
 
     bootstrap();
-  </script>
-
-  <!-- Touch Drag&Drop-Shim: iPad/iOS feuern keine nativen HTML5-Drag-Events. Dieser Shim
-       übersetzt Touch-Gesten auf [draggable=true]-Elementen in dragstart/dragover/drop/dragend,
-       die die App (inkl. React) bereits verarbeitet. Nur aktiv auf Touch-Geräten. -->
-  <script>
-  (function(){
-    if (typeof window === 'undefined') return;
-    var isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
-    if (!isTouch) return;
-    var THRESH = 8;
-    var src = null, dragging = false, startX = 0, startY = 0, lastT = null, ghost = null, dt = null;
-
-    function closestDraggable(el){
-      while (el && el !== document.body){
-        if (el.getAttribute && el.getAttribute('draggable') === 'true') return el;
-        el = el.parentNode;
-      }
-      return null;
-    }
-    function makeDT(){
-      var store = {};
-      return {
-        dropEffect: 'move', effectAllowed: 'all',
-        get types(){ return Object.keys(store); },
-        setData: function(t, v){ store[t] = String(v); },
-        getData: function(t){ return store[t] || ''; },
-        clearData: function(t){ if (t) delete store[t]; else store = {}; },
-        setDragImage: function(){}
-      };
-    }
-    function fire(type, target, touch){
-      if (!target) return;
-      var ev;
-      try { ev = new Event(type, { bubbles: true, cancelable: true }); }
-      catch(_) { ev = document.createEvent('Event'); ev.initEvent(type, true, true); }
-      ev.dataTransfer = dt;
-      ev.clientX = touch.clientX; ev.clientY = touch.clientY;
-      ev.pageX = touch.pageX; ev.pageY = touch.pageY;
-      ev.screenX = touch.screenX; ev.screenY = touch.screenY;
-      ev.button = 0; ev.buttons = 1;
-      target.dispatchEvent(ev);
-    }
-    function makeGhost(el, touch){
-      var r = el.getBoundingClientRect();
-      var g = el.cloneNode(true);
-      g.style.position = 'fixed'; g.style.left = '0'; g.style.top = '0';
-      g.style.width = r.width + 'px'; g.style.height = r.height + 'px';
-      g.style.pointerEvents = 'none'; g.style.opacity = '0.85'; g.style.zIndex = '2147483647';
-      g.style.margin = '0'; g.style.boxShadow = '0 8px 24px rgba(0,0,0,0.28)'; g.style.borderRadius = '8px';
-      var bg = getComputedStyle(el).backgroundColor;
-      if (!bg || bg === 'rgba(0, 0, 0, 0)' || bg === 'transparent') bg = getComputedStyle(document.body).backgroundColor || '#fff';
-      g.style.background = bg;
-      g._ox = touch.clientX - r.left; g._oy = touch.clientY - r.top;
-      document.body.appendChild(g);
-      placeGhost(touch);
-      return g;
-    }
-    function placeGhost(touch){
-      if (ghost) ghost.style.transform = 'translate(' + (touch.clientX - ghost._ox) + 'px,' + (touch.clientY - ghost._oy) + 'px)';
-    }
-    function cleanup(){
-      if (ghost && ghost.parentNode) ghost.parentNode.removeChild(ghost);
-      ghost = null; src = null; dragging = false; lastT = null; dt = null;
-    }
-    document.addEventListener('touchstart', function(e){
-      if (e.touches.length !== 1) { cleanup(); return; }
-      var d = closestDraggable(e.target);
-      if (!d) { src = null; return; }
-      src = d; var t = e.touches[0]; startX = t.clientX; startY = t.clientY; dragging = false; lastT = null;
-    }, { passive: true });
-    document.addEventListener('touchmove', function(e){
-      if (!src) return;
-      var t = e.touches[0];
-      if (!dragging){
-        if (Math.abs(t.clientX - startX) < THRESH && Math.abs(t.clientY - startY) < THRESH) return;
-        dragging = true; dt = makeDT();
-        fire('dragstart', src, t);
-        ghost = makeGhost(src, t);
-      }
-      e.preventDefault(); // Scrollen während des Ziehens unterdrücken
-      placeGhost(t);
-      var prev = ghost ? ghost.style.display : null;
-      if (ghost) ghost.style.display = 'none';
-      var tgt = document.elementFromPoint(t.clientX, t.clientY);
-      if (ghost) ghost.style.display = prev;
-      if (tgt !== lastT){ if (lastT) fire('dragleave', lastT, t); if (tgt) fire('dragenter', tgt, t); lastT = tgt; }
-      if (tgt) fire('dragover', tgt, t);
-    }, { passive: false });
-    function end(e){
-      if (!src) return;
-      if (dragging){
-        var t = (e.changedTouches && e.changedTouches[0]) || { clientX: startX, clientY: startY, pageX: startX, pageY: startY, screenX: 0, screenY: 0 };
-        if (ghost) ghost.style.display = 'none';
-        var tgt = document.elementFromPoint(t.clientX, t.clientY);
-        if (tgt) fire('drop', tgt, t);
-        fire('dragend', src, t);
-      }
-      cleanup();
-    }
-    document.addEventListener('touchend', end, { passive: false });
-    document.addEventListener('touchcancel', function(){ cleanup(); }, { passive: false });
-  })();
   </script>
 
   <!-- App source (not executed directly, transformed by Babel above) -->
@@ -2541,27 +2439,63 @@ const Inp = ({ label, tip, value, onChange, type = "text", placeholder = "", w }
 function useDrag(items, setItems) {
   const from = useRef(null);
   const [over, setOver] = useState(null);
-  const onStart = id => { from.current = id; };
-  const onOver = (e, id) => { e.preventDefault(); setOver(id); };
-  const onDrop = toId => {
-    if (!from.current || from.current === toId) { setOver(null); return; }
-    const arr = [...items];
-    const fi = arr.findIndex(x => x.id === from.current);
+  const itemsRef = useRef(items); itemsRef.current = items;
+  const overRef = useRef(null);
+  const doReorder = (fromId, toId) => {
+    if (!fromId || fromId === toId) return;
+    const arr = [...itemsRef.current];
+    const fi = arr.findIndex(x => x.id === fromId);
     const ti = arr.findIndex(x => x.id === toId);
+    if (fi < 0 || ti < 0) return;
     const [item] = arr.splice(fi, 1);
     arr.splice(ti, 0, item);
     setItems(arr);
+  };
+  const onStart = id => { from.current = id; };
+  const onOver = (e, id) => { e.preventDefault(); setOver(id); };
+  const onDrop = toId => {
+    doReorder(from.current, toId);
     from.current = null; setOver(null);
   };
   const onEnd = () => { from.current = null; setOver(null); };
+  // Touch-Unterstützung (iPad/iOS): native HTML5-DnD feuert auf Touch nicht.
+  const touchStart = (id, e) => {
+    from.current = id; overRef.current = null;
+    const t0 = e.touches[0]; const sx = t0.clientX, sy = t0.clientY; let dragging = false;
+    const move = ev => {
+      const t = ev.touches[0]; if (!t) return;
+      if (!dragging) {
+        if (Math.abs(t.clientX - sx) < 8 && Math.abs(t.clientY - sy) < 8) return;
+        dragging = true;
+      }
+      ev.preventDefault();
+      let el = document.elementFromPoint(t.clientX, t.clientY);
+      while (el && !(el.getAttribute && el.getAttribute('data-dragrow'))) el = el.parentElement;
+      const id2 = el ? el.getAttribute('data-dragrow') : null;
+      overRef.current = id2; setOver(id2);
+    };
+    const end = () => {
+      document.removeEventListener('touchmove', move);
+      document.removeEventListener('touchend', end);
+      document.removeEventListener('touchcancel', end);
+      if (dragging && overRef.current) doReorder(from.current, overRef.current);
+      from.current = null; overRef.current = null; setOver(null);
+    };
+    document.addEventListener('touchmove', move, { passive: false });
+    document.addEventListener('touchend', end);
+    document.addEventListener('touchcancel', end);
+  };
   // handle(id): props for a drag handle element (separate from drop target)
   const handle = id => ({
     draggable: true,
+    'data-draghandle': '1',
     onDragStart: e => { e.dataTransfer.effectAllowed='move'; onStart(id); },
     onDragEnd: onEnd,
+    onTouchStart: e => touchStart(id, e),
   });
   // row(id): props for the drop-target row
   const row = id => ({
+    'data-dragrow': id,
     onDragOver: e => onOver(e, id),
     onDrop: () => onDrop(id),
   });
@@ -10514,7 +10448,7 @@ function ADSheet({ project, onChange, lockedUnit, dayIdxProp, hideChrome }) {
 
   const thS = {padding:'9px 8px', fontSize:10.5, fontWeight:600, color:C.dim,
     background:C.card, textAlign:'left', borderBottom:'1px solid '+C.border, whiteSpace:'nowrap',
-    ...(printing ? {} : { position:'sticky', top:34, zIndex:5 })};
+    ...(printing ? {} : { position:'sticky', top:38, zIndex:5 })};
   const tdS = {padding:'5px 8px', verticalAlign:'middle', fontSize:11};
   const inp = {border:'none', background:'transparent', fontSize:12,
     fontFamily:'inherit', outline:'none', width:'100%', color:C.text};
@@ -10547,6 +10481,7 @@ function ADSheet({ project, onChange, lockedUnit, dayIdxProp, hideChrome }) {
   return (
     <div className={printing ? "print-root doc-a4 print-landscape" : undefined}>
       {printing && <h2 style={{ ...S.h1, fontSize:18, marginBottom:6 }}>AD-Sheet — Tag {dayIdx+1}{shootDays[dayIdx]?.date?" ("+fmtDate(shootDays[dayIdx].date)+")":""}</h2>}
+      <div style={(hideChrome || printing) ? undefined : { maxHeight:'calc(100vh - 130px)', overflowY:'auto', overflowX:'auto', WebkitOverflowScrolling:'touch' }}>
       {/* Header */}
       {hideChrome
         ? <div className="no-print" style={{ display:'flex', alignItems:'center', gap:10, marginBottom:10, flexWrap:'wrap' }}>
@@ -10592,7 +10527,7 @@ function ADSheet({ project, onChange, lockedUnit, dayIdxProp, hideChrome }) {
 
         <div style={{ ...S.card, padding:0, overflow:'visible' }}>
           {!printing && (
-            <div className="no-print" style={{ position:'sticky', top:0, zIndex:6, display:'flex', alignItems:'center', gap:8, padding:'7px 12px', minHeight:34, background:C.card, borderBottom:'1px solid '+C.border, borderRadius:'14px 14px 0 0' }}>
+            <div className="no-print" style={{ position:'sticky', top:0, zIndex:6, display:'flex', alignItems:'center', gap:8, padding:'0 12px', height:38, background:C.card, borderBottom:'1px solid '+C.border, borderRadius:'14px 14px 0 0' }}>
               <span style={{ fontSize:11.5, fontWeight:700, color:C.mid, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>
                 {(_units.find(u=>u.id===unitView)||_units[0]).label} · Tag {dayIdx+1}
               </span>
@@ -10789,6 +10724,7 @@ function ADSheet({ project, onChange, lockedUnit, dayIdxProp, hideChrome }) {
             <span>Offen: <strong>{scheduled.filter(r=>!r.done&&!r.cancelled).length}</strong></span>
           </div>
         )}
+      </div>
       </div>
     </div>
   );
