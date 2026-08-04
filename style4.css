@@ -102,6 +102,19 @@ html {
     color: white;
 }
 
+#rental {
+    border-radius: 30px;
+    padding: 10px;
+    padding-left: 20px;
+    padding-right: 20px;
+    margin: 30px;
+    background-color: black;
+    color: white;
+    justify-content: center;
+    margin-left: auto;
+    margin-right: auto;
+}
+
 .subheading{
         padding-bottom: 1.75vh;
 }
@@ -580,7 +593,7 @@ html {
 
 @media screen and (min-width: 1550px){
     .website-content {
-        max-width: 60vw;
+        max-width: 65vw;
         margin-left: auto;
         margin-right: auto;
     }
@@ -649,7 +662,7 @@ html {
     padding-top: 5vh;
 
 }
-.about, .work, .contact, h2 {
+.about, .work, .contact, h2, .rental {
     max-width: 100%;
     margin-left: auto;
     margin-right: auto;
@@ -667,7 +680,7 @@ html {
     flex-direction:row;
     justify-content: center;
     flex-wrap: wrap;
-    padding-bottom: 10vh;
+    padding-bottom: 2vh;
 }
 
 h1 {
@@ -848,8 +861,9 @@ p4 {
 
 /*Über Mich*/
 
-.about {
-    padding-bottom: 10vh;
+.about, .rental {
+    padding-bottom: 20vh;
+    padding-top: 10vh;
     margin-top: 7vh
 }
 
