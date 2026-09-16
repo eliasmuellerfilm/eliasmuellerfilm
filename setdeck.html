@@ -812,7 +812,7 @@
                     // Vergleich in Referenz-Form (Bilder als imgref), sonst werden Bilder fälschlich als „fehlend" gewertet
                     const localLen = JSON.stringify(imgSigReplace(strip(p))).length;
                     if (incJson.length < localLen * 0.6 && localLen > 2000) return p;
-                    return { ...resolvedIn, id: p.id, settings: { ...(resolvedIn.settings || {}), guestAccess: p.settings.guestAccess, shareId: sid } };
+                    return { ...resolvedIn, id: p.id, settings: { ...(resolvedIn.settings || {}), guestAccess: p.settings.guestAccess, shareId: sid, revokedCodes: p.settings.revokedCodes, crewLinks: p.settings.crewLinks, crewEnabled: p.settings.crewEnabled, crewDataId: p.settings.crewDataId, crewNotify: p.settings.crewNotify, notify: p.settings.notify, notifyDelayThreshold: p.settings.notifyDelayThreshold, notifyBudgetThreshold: p.settings.notifyBudgetThreshold } };
                   }
                   return p;
                 }));
@@ -17402,21 +17402,24 @@ function ShareLinkGate({ sid, code, onImport, onCancel }) {
   const [err, setErr] = React.useState('');
   const did = React.useRef(false);
   React.useEffect(() => {
-    let alive = true;
-    (async () => {
+    let alive = true, tries = 0; const MAX = 8;
+    const attempt = async () => {
+      if (!alive) return;
       const F = await crewFs(); if (!F) { if (alive) { setErr('Keine Cloud-Verbindung.'); setStatus('error'); } return; }
       try {
         const snap = await F.getDoc(F.doc(F.db, 'guestShares', sid));
         if (!alive) return;
-        if (!snap.exists()) { setErr('Freigabe nicht gefunden – evtl. noch nicht veröffentlicht oder zurückgezogen.'); setStatus('error'); return; }
-        const d = snap.data();
-        const g = (d.guests || []).find(x => x.code === code);
-        if (!g || (d.revokedCodes || []).includes(code)) { setErr('Dieser Zugang wurde zurückgezogen oder existiert nicht.'); setStatus('error'); return; }
-        setEntry(g); setName(d.name || 'Projekt');
-        if (g.password) { setStatus('password'); }
-        else { if (!did.current) { did.current = true; onImport(mkPkg(g, d.name)); } }
-      } catch (e) { if (alive) { setErr('Freigabe konnte nicht geladen werden.'); setStatus('error'); } }
-    })();
+        const d = snap.exists() ? snap.data() : null;
+        const g = d ? (d.guests || []).find(x => x.code === code) : null;
+        if (g && (d.revokedCodes || []).includes(code)) { setErr('Dieser Zugang wurde zurückgezogen.'); setStatus('error'); return; }
+        if (g && d.project) { setEntry(g); setName(d.name || 'Projekt'); if (g.password) setStatus('password'); else { if (!did.current) { did.current = true; onImport(mkPkg(g, d.name)); } } return; }
+        // Freigabe (oder Projektdaten) noch nicht da → erneut versuchen
+        tries++;
+        if (tries >= MAX) { setErr('Freigabe konnte nicht geladen werden. Bitte sicherstellen, dass der Ersteller kurz online ist, und den Link in ein paar Sekunden erneut öffnen.'); setStatus('error'); return; }
+        setStatus('loading'); setTimeout(() => { if (alive) attempt(); }, 1600);
+      } catch (e) { tries++; if (tries >= MAX) { if (alive) { setErr('Freigabe konnte nicht geladen werden.'); setStatus('error'); } } else setTimeout(() => { if (alive) attempt(); }, 1600); }
+    };
+    attempt();
     return () => { alive = false; };
   }, [sid, code]);
   const mkPkg = (g, nm) => ({ mode: 'live', kind: (g.role === 'Mitproducer' ? 'coproducer' : 'guest'), shareId: sid, code, tabs: g.tabs, role: g.role, name: nm || name || 'Projekt' });
@@ -17532,7 +17535,7 @@ async function revokeGuestEntry(shareId, entryId) {
 function newShareId() { return 'sd' + uid().replace(/[^a-z0-9]/gi, '').slice(0, 12); }
 function crewDataIdOf(s) { return (s && (s.crewDataId || s.shareId)) || null; }
 function crewLinksOf(s) {
-  if (s && s.crewLinks && s.crewLinks.length) return s.crewLinks;
+  if (s && Array.isArray(s.crewLinks)) return s.crewLinks; // explizit gesetzt (auch leer) → nicht neu erzeugen
   if (s && s.shareId) return [{ id: s.shareId, label: 'Standard', allowExpenses: !s.crewHideExpenses, allowHours: !s.crewHideHours, paused: !!s.crewPaused, allowed: null }];
   return [];
 }
